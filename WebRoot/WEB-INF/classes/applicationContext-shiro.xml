@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+    <beans xmlns="http://www.springframework.org/schema/beans"  
+	    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+	    xsi:schemaLocation="
+	    http://www.springframework.org/schema/beans 
+	    http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	    ">  
+	
+	<!-- 自定义权限认证 -->
+    <bean id="authRealm" class="com.lczx.shiro.AuthRealm"/>
+		
+	<!-- 安全管理 -->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <!-- 单一领域应用,如果您有多个域，则使用“域”属性代替. -->
+        <property name="realm" ref="authRealm"/><!-- 引用自定义的realm -->
+        <!-- 二级缓存 -->
+    <!--<property name="cacheManager" ref="shiroEhcacheManager"/> -->
+    </bean>
+    
+    <!-- 安全管理器 -->
+<!--   
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+ --> 
+    
+	<!-- 如果直接在web.xml中定义shiro的过滤器;此bean要被web.xml引用,需要和web.xml中的filtername同名 -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+    	<!-- 调用我们配置的权限管理器 -->
+        <property name="securityManager" ref="securityManager"/>
+        <!-- 配置我们的登录请求地址 -->
+        <property name="loginUrl" value="/admin/toLogin.jhtml"/> <!-- 没有认证返回地址 -->
+        <!-- 配置我们在登录页登录成功后的跳转地址，如果你访问的是非/login地址，则跳到您访问的地址 -->
+        <property name="successUrl" value="/admin/common/main.jhtml"/>
+        <!-- 如果您请求的资源不再您的权限范围，则跳转到/403请求地址 -->  
+        <property name="unauthorizedUrl" value="/admin/403.jhtml"/>
+        <!-- 权限配置 -->
+        <property name="filterChainDefinitions">
+            <value>            <!-- **代表任意子目录 -->
+            <!-- anon表示此地址不需要任何权限即可访问 --> 
+            /index.html = anon
+            /document/** = anon
+              /image/** = anon
+             /resources/** = anon
+             /article/** = anon
+            /teacher/** = anon
+            /video/** = anon
+            /admin/toLogin.jhtml = anon
+            /admin/login.jhtml = anon
+            /admin/kindeditor-4.0.3/** = anon
+            /admin/common/verificode.jhtml = anon
+            
+            <!-- roles[admin]表示访问此连接需要用户的角色为admin -->  
+            <!-- /admin/** = authc,roles[admin] -->
+            <!--所有的请求(除去配置的静态资源请求或请求地址为anon的请求)都要通过登录验证,如果未登录则跳到/login-->
+            /admin/** = authc
+            </value>
+        </property>
+    </bean>
+	
+	<!-- 用户授权/认证信息Cache, 采用EhCache  缓存 -->
+<!--     
+	<bean id="shiroEhcacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+        <property name="cacheManagerConfigFile" value="classpath:ehcache-shiro.xml"/>
+    </bean>
+ -->    
+    <!-- 保证实现了Shiro内部lifecycle函数的bean执行 -->
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+
+    <!-- 生成代理，通过代理进行控制 -->
+<!-- 如果不注释，cglib代理不生效。由于没有写service接口，java通过借口代理失败。
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+          depends-on="lifecycleBeanPostProcessor">
+    </bean>
+ -->
+    
+		
+</beans>
